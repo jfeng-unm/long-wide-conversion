@@ -1,0 +1,73 @@
+---
+title: "Long/wide data format conversion"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+# install.packages(c('pacman', 'dplyr', 'tidyr', 'reshape2', 'readxl'))
+pacman::p_load(pacman, dplyr, tidyr, reshape2, readxl)
+
+# Read data files
+data_file <- 'C:/Users/jingfeng/Documents/Tech days/Sample student data.xlsx'
+
+credit_hrs <- read_xlsx(data_file, sheet = 1)
+grads <- read_xlsx(data_file, sheet = 2)
+
+credit_hrs
+```
+
+```{r}
+# Converting from long to wide using spread()
+
+credit_wide <- credit_hrs %>% 
+  spread(Semester, Credit_hours) %>% 
+  replace(is.na(.), 0)
+
+credit_wide
+```
+```{r}
+# Converting from long to wide using dcast()
+
+credit_wide <- credit_hrs %>% 
+  dcast(ID + Major ~ Semester, value.var = 'Credit_hours') %>% 
+  replace(is.na(.), 0)
+
+credit_wide
+```
+```{r}
+# Converting back to long format using gather()
+
+credit_long <- credit_wide %>% 
+  gather(Semester, Credit_hours, `Fall 2022`:`Summer 2023`)
+
+credit_long 
+```
+```{r}
+# Converting back to long format using melt()
+
+credit_long <- credit_wide %>% 
+  melt(id.vars = c('ID', 'Major'),
+       variable.name = 'Semester',
+       value.name = 'Credit_hours') %>% 
+  filter(Credit_hours > 0)
+
+credit_long 
+```
+```{r}
+# Transpose the grads table by converting it to long form, and then to wide form
+grads_long <- grads %>% 
+  gather(Gender, Graduates, Male:Female)
+
+grads_long
+```
+```{r}
+grads_wide <- grads_long %>% 
+  spread(Academic_year, Graduates)
+
+grads_wide
+```
+
